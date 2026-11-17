@@ -11,7 +11,7 @@ git clone https://github.com/Damilola-0/eda-video-timestamp-alignment.git
 cd eda-video-timestamp-alignment
 ```
 
-Keep the `makerspace_controller` folder together with the launcher and test files in the repository root. Do not copy just the launcher by itself.
+Keep the `makerspace_controller` folder together with the launcher and test files in the repository root.
 
 ## Project files
 
