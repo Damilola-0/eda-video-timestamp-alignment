@@ -32,9 +32,71 @@ class Controller:
 
         LOG_ROOT.mkdir(parents=True, exist_ok=True)
         self.root = root
-        self.root.title("Makerspace: EDA, LabRecorder AND OBS CONTROLLER")
-        self.root.geometry("770x690")
-        self.root.minsize(690, 550)
+        self.root.title("Makerspace: EDA, LabRecorder and OBS Controller")
+        self.root.iconbitmap(str(Path(__file__).with_name("app_icon.ico")))
+        self.root.geometry("820x760")
+        self.root.minsize(720, 640)
+
+        self.style = ttk.Style(root)
+        self.style.theme_use("clam")
+        self.root.configure(background="#F3F6FA")
+        self.style.configure(".", font=("Segoe UI", 10), background="#F3F6FA", foreground="#24364B")
+        self.style.configure("TFrame", background="#F3F6FA")
+        self.style.configure("TLabel", background="#F3F6FA", foreground="#24364B")
+        self.style.configure("Title.TLabel", font=("Segoe UI", 18, "bold"), foreground="#173B63")
+        self.style.configure("Subtitle.TLabel", foreground="#5B6B7D")
+        self.style.configure(
+            "Section.TLabelframe",
+            background="#F3F6FA",
+            bordercolor="#D5DFEA",
+            padding=12,
+        )
+        self.style.configure(
+            "Section.TLabelframe.Label",
+            background="#F3F6FA",
+            foreground="#173B63",
+            font=("Segoe UI", 10, "bold"),
+        )
+        self.style.configure("TEntry", fieldbackground="#FFFFFF", padding=6)
+        self.style.configure("TButton", padding=(10, 7), borderwidth=0)
+        self.style.configure(
+            "Primary.TButton",
+            background="#1769AA",
+            foreground="#FFFFFF",
+            font=("Segoe UI", 10, "bold"),
+        )
+        self.style.map(
+            "Primary.TButton",
+            background=[("disabled", "#D5DEE8"), ("active", "#12578F")],
+            foreground=[("disabled", "#7B8794")],
+        )
+        self.style.configure("Cue.TButton", background="#DFECF8", foreground="#174A78")
+        self.style.map("Cue.TButton", background=[("active", "#C9DDF0")])
+        self.style.configure(
+            "Stop.TButton",
+            background="#B64242",
+            foreground="#FFFFFF",
+            font=("Segoe UI", 10, "bold"),
+        )
+        self.style.map(
+            "Stop.TButton",
+            background=[("disabled", "#E6D6D6"), ("active", "#963535")],
+            foreground=[("disabled", "#927D7D")],
+        )
+        self.style.configure(
+            "Status.TLabel",
+            background="#E7F1FB",
+            foreground="#184A74",
+            padding=(10, 8),
+            font=("Segoe UI", 10, "bold"),
+        )
+        self.style.configure(
+            "Hint.TLabel",
+            background="#FFF8E7",
+            foreground="#755719",
+            padding=9,
+        )
+        self.style.configure("Audit.TLabel", foreground="#5B6B7D", font=("Segoe UI", 9))
 
         self.pylsl = None
         self.marker_outlet = None
@@ -51,46 +113,96 @@ class Controller:
         self.obs_video = ""
         self.root_folder = tk.StringVar(master=self.root, value=str(ROOT_DEFAULT))
         self.obs_password = tk.StringVar()
-        self.status = tk.StringVar(value="Ready. Check your LabRecorder save location before START.")
+        self.status = tk.StringVar(value="Ready. Check LabRecorder save location before starting.")
         self.log_lock = threading.Lock()
         with self.log_path.open("w", newline="", encoding="utf-8") as f:
             csv.writer(f).writerow(["event", "lsl_seconds", "unix_seconds", "local_datetime", "utc_datetime", "detail"])
 
-        pane = ttk.Frame(root, padding=16)
+        pane = ttk.Frame(root, padding=18)
         pane.pack(fill="both", expand=True)
-        ttk.Label(pane, text="One-button EDA and camera recording", font=("Segoe UI", 14, "bold")).pack(anchor="w")
-        ttk.Label(pane, text="OBS WebSocket password (not saved):").pack(anchor="w", pady=(12, 3))
-        ttk.Entry(pane, show="*", textvariable=self.obs_password).pack(fill="x")
-        ttk.Label(pane, text="LabRecorder Study Root: must match the 'Study Root' shown in LabRecorder.").pack(anchor="w", pady=(12, 3))
-        folder_line = ttk.Frame(pane)
+        ttk.Label(pane, text="Makerspace recording controller", style="Title.TLabel").pack(anchor="w")
+        ttk.Label(
+            pane,
+            text="Manage EDA, LabRecorder, and OBS recording from one window.",
+            style="Subtitle.TLabel",
+        ).pack(anchor="w", pady=(2, 12))
+
+        setup_frame = ttk.LabelFrame(pane, text="Setup", style="Section.TLabelframe")
+        setup_frame.pack(fill="x", pady=(0, 10))
+        ttk.Label(setup_frame, text="OBS WebSocket password (not saved):").pack(anchor="w", pady=(0, 3))
+        ttk.Entry(setup_frame, show="*", textvariable=self.obs_password).pack(fill="x")
+        ttk.Label(
+            setup_frame,
+            text="LabRecorder Study Root (must match the 'Study Root' shown in LabRecorder):",
+        ).pack(anchor="w", pady=(10, 3))
+        folder_line = ttk.Frame(setup_frame)
         folder_line.pack(fill="x")
         ttk.Entry(folder_line, textvariable=self.root_folder).pack(side="left", fill="x", expand=True)
         ttk.Button(folder_line, text="Browse", command=self.choose_root).pack(side="left", padx=(6, 0))
-        ttk.Label(pane, text="Prerequisites: PLUX connected, OpenSignals TCP-IP 5555 and LSL enabled; "
-                  "LabRecorder RCS 22345; OBS WebSocket 4455. Stop any existing recordings before starting.",
-                  wraplength=715).pack(anchor="w", pady=(10, 9))
-        self.check_button = ttk.Button(pane, text="1. CHECK CONNECTIONS", command=self.check)
+        ttk.Label(
+            setup_frame,
+            text="Before starting: connect PLUX; enable OpenSignals TCP-IP 5555 and LSL; "
+                 "start LabRecorder RCS 22345 and OBS WebSocket 4455. Stop any existing recordings.",
+            style="Hint.TLabel",
+            wraplength=740,
+        ).pack(fill="x", pady=(10, 0))
+
+        controls_frame = ttk.LabelFrame(pane, text="Recording controls", style="Section.TLabelframe")
+        controls_frame.pack(fill="x", pady=(0, 10))
+        self.check_button = ttk.Button(controls_frame, text="1. CHECK CONNECTIONS", command=self.check)
         self.check_button.pack(fill="x", pady=3)
-        self.start_button = ttk.Button(pane, text="2. START EDA + LABRECORDER + OBS", command=self.start)
+        self.start_button = ttk.Button(
+            controls_frame,
+            text="2. START EDA, LABRECORDER and OBS",
+            command=self.start,
+            style="Primary.TButton",
+        )
         self.start_button.pack(fill="x", pady=3)
-        self.cue_button = ttk.Button(pane, text="SEND BEEP + LSL MARKER", command=self.cue)
+        self.cue_button = ttk.Button(
+            controls_frame,
+            text="SEND BEEP and LSL MARKER",
+            command=self.cue,
+            style="Cue.TButton",
+        )
         self.cue_button.pack(fill="x", pady=3)
-        self.stop_button = ttk.Button(pane, text="3. STOP ALL THREE + CHECK XDF", command=self.stop)
+        self.stop_button = ttk.Button(
+            controls_frame,
+            text="3. STOP ALL THREE and CHECK XDF",
+            command=self.stop,
+            style="Stop.TButton",
+        )
         self.stop_button.pack(fill="x", pady=3)
-        ttk.Separator(pane).pack(fill="x", pady=9)
-        ttk.Label(pane, textvariable=self.status, wraplength=715, foreground="#194f76").pack(anchor="w", pady=3)
-        ttk.Label(pane, text="Live log (also saved to CSV):").pack(anchor="w", pady=(9, 3))
-        log_frame = ttk.Frame(pane)
-        log_frame.pack(fill="both", expand=True)
-        self.log_area = tk.Text(log_frame, height=12, state="disabled", wrap="word", font=("Consolas", 9))
+
+        ttk.Label(pane, textvariable=self.status, style="Status.TLabel", wraplength=760).pack(fill="x", pady=(0, 10))
+        log_frame = ttk.LabelFrame(pane, text="Activity log (also saved to CSV)", style="Section.TLabelframe")
+        log_frame.pack(fill="both", expand=True, pady=(0, 10))
+        self.log_area = tk.Text(
+            log_frame,
+            height=8,
+            state="disabled",
+            wrap="word",
+            font=("Consolas", 9),
+            background="#FFFFFF",
+            foreground="#24364B",
+            insertbackground="#24364B",
+            relief="solid",
+            borderwidth=1,
+            padx=8,
+            pady=8,
+        )
         scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log_area.yview)
         self.log_area.configure(yscrollcommand=scrollbar.set)
         self.log_area.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-        ttk.Label(pane, text="The 'OK' from LabRecorder means command received, NOT data verified. "
-                  "During the first test, check its STOP button/status and watch an increasing file size. "
-                  "Final verification is AFTER STOP.", wraplength=715).pack(anchor="w", pady=10)
-        ttk.Label(pane, text=f"Audit CSV: {self.log_path}", wraplength=715).pack(anchor="w")
+        ttk.Label(
+            pane,
+            text="LabRecorder's 'OK' acknowledges the command, not the data. For the first test, confirm "
+                 "recording is active. After STOP, the controller checks the saved XDF for required "
+                 "streams and nonzero samples.",
+            style="Hint.TLabel",
+            wraplength=760,
+        ).pack(fill="x", pady=(0, 8))
+        ttk.Label(pane, text=f"Audit CSV: {self.log_path}", style="Audit.TLabel", wraplength=760).pack(anchor="w")
         self._controls()
         root.protocol("WM_DELETE_WINDOW", self.close)
 
