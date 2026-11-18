@@ -1,6 +1,6 @@
 # Makerspace EDA and OBS Recording Controller
+A Python desktop application to coordinate the recording of EDA with OpenSignals, LabRecorder, and OBS. It creates a session log file and checks the saved XDF file after recording is finished.
 
-A Python desktop application for coordinating EDA recording with OpenSignals, LabRecorder, and OBS. It creates a session log and checks the saved XDF file after recording stops.
 
 ## Download the project
 
@@ -11,7 +11,7 @@ git clone https://github.com/Damilola-0/eda-video-timestamp-alignment.git
 cd eda-video-timestamp-alignment
 ```
 
-Keep the `makerspace_controller` folder alongside the launcher and other root-level scripts. Do not separate the folder from the repository files.
+Keep the `makerspace_controller` folder including the launcher and other root-level scripts. Do not separate the folder from the repository files.
 
 ## Project files
 
@@ -43,15 +43,15 @@ Python may create a `__pycache__` folder while running. It contains temporary fi
   python -m pip install pylsl pyxdf obsws-python
   ```
 
-- A connected PLUX device, with OpenSignals configured for TCP-IP on port `5555` and LSL enabled
-- LabRecorder running with its RCS interface on port `22345`
-- OBS running with its WebSocket server enabled on port `4455`
+-A connected PLUX device and the OpenSignals app configured with TCP-IP on port 5555 and LSL enabled.
+-LabRecorder with its RCS interface enabled and listening on port 22345.
+-OBS with its WebSocket server enabled on port 4455.
 
-Make sure these ports match your local OpenSignals, LabRecorder, and OBS settings. The controller's default LabRecorder Study Root is `Documents\CurrentStudy`; it must match the Study Root shown in LabRecorder. Enter the OBS WebSocket password in the app; it is not saved.
+These ports need to match the ones in your local OpenSignals, LabRecorder and OBS installations. The LabRecorder study root of the controller is set to DocumentsCurrentStudy by default, it needs to be the same as the Study Root of your LabRecorder. The password for the OBS WebSocket is entered into the app and is not stored.
 
-## Run the tests
+## How to run the tests
 
-From the repository root:
+From the repository root run:
 
 ```powershell
 python -m unittest -v test_makerspace_recording_controller_obs27_parallel_stop.py
@@ -65,18 +65,27 @@ From the repository root:
 python makerspace_recording_controller_obs27_parallel_stop.py
 ```
 
-1. Connect the PLUX device and start/configure OpenSignals, LabRecorder, and OBS.
-2. Confirm LabRecorder's save location and Study Root. Stop any recordings already in progress.
-3. Enter the OBS WebSocket password and click **CHECK CONNECTIONS**.
-4. Click **START** and confirm the recording indicators in LabRecorder and OBS. An acknowledgement alone does not confirm that data is being recorded.
-5. Use **SEND BEEP and LSL MARKER** to add a synchronization cue when needed.
-6. Click **STOP**. Check the activity log for the XDF verification and confirm the recording completed as expected.
+1. Connect the PLUX device. Launch and configure OpenSignals, LabRecorder, and OBS.
 
-By default, the Study Root is `Documents\CurrentStudy`, and audit CSV logs are written to `Documents\Makerspace_Sync_Logs`. Override these folders with the `MAKERSPACE_STUDY_ROOT` and `MAKERSPACE_LOG_ROOT` environment variables.
+2. Make sure LabRecorder is saving to the right location and that the Study Root is set. Stop any recordings that are currently in progress.
+
+3. Enter the password for the OBS WebSocket and click CHECK CONNECTIONS.
+
+4. Click START and make sure the recording indicators are turned on in both LabRecorder and OBS. Acknowledgement is not enough to ensure that data is being recorded.
+
+5. Use the SEND BEEP and LSL MARKER buttons to add a synchronization cue when necessary.
+
+6. Verify the XDF verification in the activity log. Click STOP.
+
+The default Study Root is Documents\\CurrentStudy. Make sure the recording completed as expected.
+
+Audit logs are written to Documents\\Makerspace_Sync_Logs. The default folders can be overridden with the MAKERSPACE_STUDY_ROOT and MAKERSPACE_LOG_ROOT environment variables.
 
 ## Verify EDA timestamps with official PyXDF
 
-The verifier loads the selected XDF three times with PyXDF: once with raw timestamps, once with clock correction, and once with clock correction plus de-jittering. It checks that sample values and counts are preserved, EDA sequence numbers are continuous, and processed timestamps increase. The input XDF is read-only.
+The PyXDF verifier will read in the selected XDF file three times.
+
+The first time will be with raw timestamps, the second time will be with clock corrected timestamps, and the third time will be with clock corrected plus de-jittered timestamps. It will then check that the sample values and counts have not been changed, that the EDA sequence numbers are continuous, and that the processed timestamps are increasing. The input XDF file is read-only
 
 Install the requirements and run the verifier from the repository root:
 
