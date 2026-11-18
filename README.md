@@ -70,6 +70,33 @@ python makerspace_recording_controller_obs27_parallel_stop.py
 
 By default, the Study Root is `Documents\CurrentStudy`, and audit CSV logs are written to `Documents\Makerspace_Sync_Logs`. The default folders can be overridden with the `MAKERSPACE_STUDY_ROOT` and `MAKERSPACE_LOG_ROOT` environment variables.
 
+## Verify EDA timestamps with official PyXDF
+
+This verifier loads the selected XDF three times with PyXDF: raw timestamps, clock-corrected timestamps, and clock-corrected plus de-jittered timestamps. It checks that sample values and counts are preserved, EDA sequence numbers are continuous, and processed timestamps increase. The XDF is read-only.
+
+Install the requirements and run it from the repository root:
+
+```powershell
+python -m pip install pyxdf numpy
+python "verify with official pyxdf.py"
+```
+
+Choose an XDF in the file dialog. You can also pass its path directly:
+
+```powershell
+python "verify with official pyxdf.py" "C:\path\to\recording.xdf"
+```
+
+The verifier currently expects exactly one EDA stream named `OpenSignals` and one `Makerspace_Sync_Marker` stream. The recording controller is configured to name its EDA stream `OpenSignals_EDA`, which this verifier does not currently accept.
+
+Results are written beside the XDF in `stamped_pyxdf_validation`:
+
+- `official_pyxdf_validation_report.txt` summarizes sample continuity, sampling intervals, and timestamp shifts. Failed checks stop the script with an error.
+- `eda_official_pyxdf_raw_vs_processed.csv` contains per-sample EDA values and raw, clock-corrected, and processed timestamps.
+- `markers_official_pyxdf_clock_only.csv` contains marker timestamps before and after clock correction.
+
+Running the verifier again for the same XDF overwrites these output files.
+
 ## Align an EDA recording with video
 
 Install `pyxdf` and `numpy`, and make sure `ffmpeg` and `ffprobe` are available on `PATH`:
