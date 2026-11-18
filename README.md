@@ -25,7 +25,7 @@ makerspace_controller/
     __init__.py
 
 makerspace_recording_controller_obs27_parallel_stop.py  Application launcher
-test_makerspace_recording_controller_obs27_parallel_stop.py  Automated tests
+test_makerspace_recording_controller_obs27_parallel_stop.py
 ```
 
 Python may create a `__pycache__` folder while running. It contains temporary files and is not required.
