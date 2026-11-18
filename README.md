@@ -1,17 +1,17 @@
 # Makerspace EDA and OBS Recording Controller
 
-A Python desktop app for coordinating OpenSignals EDA recording, LabRecorder, and OBS. It writes a session activity log and checks the saved XDF file after recording stops.
+A Python desktop application for coordinating EDA recording with OpenSignals, LabRecorder, and OBS. It creates a session log and checks the saved XDF file after recording stops.
 
 ## Download the project
 
-Download the repository as a ZIP from GitHub (**Code > Download ZIP**) or clone it:
+Download a ZIP file from GitHub (**Code > Download ZIP**) or clone the repository:
 
 ```powershell
 git clone https://github.com/Damilola-0/eda-video-timestamp-alignment.git
 cd eda-video-timestamp-alignment
 ```
 
-Keep the `makerspace_controller` folder together with the launcher and test files in the repository root.
+Keep the `makerspace_controller` folder alongside the launcher and other root-level scripts. Do not separate the folder from the repository files.
 
 ## Project files
 
@@ -26,6 +26,10 @@ makerspace_controller/
 
 makerspace_recording_controller_obs27_parallel_stop.py  Application launcher
 test_makerspace_recording_controller_obs27_parallel_stop.py
+verify with official pyxdf.py                        Official PyXDF timestamp verifier
+test_verify_with_official_pyxdf.py
+Video_eda alignment.py                                EDA/video alignment
+test_video_eda_alignment.py
 ```
 
 Python may create a `__pycache__` folder while running. It contains temporary files and is not required.
@@ -33,17 +37,17 @@ Python may create a `__pycache__` folder while running. It contains temporary fi
 ## Requirements
 
 - Windows with Python 3 and Tkinter
-- Python packages:
+- Python packages for the recording controller:
 
   ```powershell
   python -m pip install pylsl pyxdf obsws-python
   ```
 
-- A connected PLUX device and OpenSignals configured with TCP-IP on port `5555` and LSL enabled
+- A connected PLUX device, with OpenSignals configured for TCP-IP on port `5555` and LSL enabled
 - LabRecorder running with its RCS interface on port `22345`
 - OBS running with its WebSocket server enabled on port `4455`
 
-Make sure these ports match the settings in your local OpenSignals, LabRecorder, and OBS installations. The controller's default LabRecorder Study Root is `Documents\CurrentStudy`; it must match the Study Root shown in LabRecorder. The OBS WebSocket password is entered in the app and is not saved.
+Make sure these ports match your local OpenSignals, LabRecorder, and OBS settings. The controller's default LabRecorder Study Root is `Documents\CurrentStudy`; it must match the Study Root shown in LabRecorder. Enter the OBS WebSocket password in the app; it is not saved.
 
 ## Run the tests
 
@@ -61,27 +65,27 @@ From the repository root:
 python makerspace_recording_controller_obs27_parallel_stop.py
 ```
 
-1. Start and configure OpenSignals, LabRecorder, and OBS; connect the PLUX device.
-2. Confirm LabRecorder's save location and Study Root. Stop any existing recordings.
+1. Connect the PLUX device and start/configure OpenSignals, LabRecorder, and OBS.
+2. Confirm LabRecorder's save location and Study Root. Stop any recordings already in progress.
 3. Enter the OBS WebSocket password and click **CHECK CONNECTIONS**.
 4. Click **START** and confirm the recording indicators in LabRecorder and OBS. An acknowledgement alone does not confirm that data is being recorded.
 5. Use **SEND BEEP and LSL MARKER** to add a synchronization cue when needed.
 6. Click **STOP**. Check the activity log for the XDF verification and confirm the recording completed as expected.
 
-By default, the Study Root is `Documents\CurrentStudy`, and audit CSV logs are written to `Documents\Makerspace_Sync_Logs`. The default folders can be overridden with the `MAKERSPACE_STUDY_ROOT` and `MAKERSPACE_LOG_ROOT` environment variables.
+By default, the Study Root is `Documents\CurrentStudy`, and audit CSV logs are written to `Documents\Makerspace_Sync_Logs`. Override these folders with the `MAKERSPACE_STUDY_ROOT` and `MAKERSPACE_LOG_ROOT` environment variables.
 
 ## Verify EDA timestamps with official PyXDF
 
-This verifier loads the selected XDF three times with PyXDF: raw timestamps, clock-corrected timestamps, and clock-corrected plus de-jittered timestamps. It checks that sample values and counts are preserved, EDA sequence numbers are continuous, and processed timestamps increase. The XDF is read-only.
+The verifier loads the selected XDF three times with PyXDF: once with raw timestamps, once with clock correction, and once with clock correction plus de-jittering. It checks that sample values and counts are preserved, EDA sequence numbers are continuous, and processed timestamps increase. The input XDF is read-only.
 
-Install the requirements and run it from the repository root:
+Install the requirements and run the verifier from the repository root:
 
 ```powershell
 python -m pip install pyxdf numpy
 python "verify with official pyxdf.py"
 ```
 
-Choose an XDF in the file dialog. You can also pass its path directly:
+Choose an XDF in the file dialog, or pass its path directly:
 
 ```powershell
 python "verify with official pyxdf.py" "C:\path\to\recording.xdf"
@@ -89,7 +93,7 @@ python "verify with official pyxdf.py" "C:\path\to\recording.xdf"
 
 The verifier currently expects exactly one EDA stream named `OpenSignals` and one `Makerspace_Sync_Marker` stream. The recording controller is configured to name its EDA stream `OpenSignals_EDA`, which this verifier does not currently accept.
 
-Results are written beside the XDF in `stamped_pyxdf_validation`:
+Results are written beside the XDF in a `stamped_pyxdf_validation` folder:
 
 - `official_pyxdf_validation_report.txt` summarizes sample continuity, sampling intervals, and timestamp shifts. Failed checks stop the script with an error.
 - `eda_official_pyxdf_raw_vs_processed.csv` contains per-sample EDA values and raw, clock-corrected, and processed timestamps.
@@ -106,6 +110,6 @@ python -m pip install pyxdf numpy
 python "Video_eda alignment.py"
 ```
 
-Select the matching XDF and video when prompted. The video must contain the audible 900 Hz beeps corresponding to the XDF's `Makerspace_Sync_Marker` events. Detection looks for the beep tone relative to each recording's audio level, rather than relying on one fixed amplitude. The script aligns events in chronological order and stops with an error if the detected beep count does not match the marker count.
+Choose the matching XDF and video when prompted. The video must contain the audible 900 Hz beeps corresponding to the XDF's `Makerspace_Sync_Marker` events. The script detects the beep tone relative to the recording's audio level rather than using a fixed amplitude threshold. It pairs beeps and markers chronologically and stops with an error if their counts do not match.
 
-Results are written beside the selected XDF in `<recording-name>_video_eda_alignment`, with a ZIP archive beside that folder. This is a software-timestamp alignment; it does not measure physical sensor-to-camera latency.
+Results are written beside the selected XDF in a `<recording-name>_video_eda_alignment` folder, with a ZIP archive beside that folder. This is software-timestamp alignment; it does not measure physical sensor-to-camera latency.
