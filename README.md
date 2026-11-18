@@ -69,3 +69,16 @@ python makerspace_recording_controller_obs27_parallel_stop.py
 6. Click **STOP**. Check the activity log for the XDF verification and confirm the recording completed as expected.
 
 By default, the Study Root is `Documents\CurrentStudy`, and audit CSV logs are written to `Documents\Makerspace_Sync_Logs`. The default folders can be overridden with the `MAKERSPACE_STUDY_ROOT` and `MAKERSPACE_LOG_ROOT` environment variables.
+
+## Align an EDA recording with video
+
+Install `pyxdf` and `numpy`, and make sure `ffmpeg` and `ffprobe` are available on `PATH`:
+
+```powershell
+python -m pip install pyxdf numpy
+python "Video_eda alignment.py"
+```
+
+Select the matching XDF and video when prompted. The video must contain the audible 900 Hz beeps corresponding to the XDF's `Makerspace_Sync_Marker` events. Detection looks for the beep tone relative to each recording's audio level, rather than relying on one fixed amplitude. The script aligns events in chronological order and stops with an error if the detected beep count does not match the marker count.
+
+Results are written beside the selected XDF in `<recording-name>_video_eda_alignment`, with a ZIP archive beside that folder. This is a software-timestamp alignment; it does not measure physical sensor-to-camera latency.
